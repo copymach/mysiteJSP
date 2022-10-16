@@ -1,6 +1,17 @@
+/* for queryDSL 5.0 */
+buildscript {
+    ext {
+        queryDslVersion = "5.0.0"
+    }
+}
+
 plugins {
     id 'org.springframework.boot' version '2.7.4'
     id 'io.spring.dependency-management' version '1.0.14.RELEASE'
+
+    /* for queryDSL 5.0 */
+    id "com.ewerk.gradle.plugins.querydsl" version "1.0.10"
+
     id 'java'
 }
 
@@ -23,12 +34,40 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    /* for querydsl 5.0 hibernate */
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-hibernate5'
+    implementation "com.querydsl:querydsl-jpa:${queryDslVersion}"
+
+
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
     annotationProcessor 'org.projectlombok:lombok'
+
+    /* for additional annotation process */
+    annotationProcessor "com.querydsl:querydsl-apt:${queryDslVersion}"
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+/* Caution Use this script with Gradle 5.0 above */
+def querydslDir = "$buildDir/generated/querydsl"
+querydsl {
+    jpa = true
+    querydslSourcesDir = querydslDir
+}
+sourceSets {
+    main.java.srcDir querydslDir
+}
+compileQuerydsl {
+    options.annotationProcessorPath = configurations.querydsl
+}
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor   }
+    querydsl.extendsFrom compileClasspath
 }
